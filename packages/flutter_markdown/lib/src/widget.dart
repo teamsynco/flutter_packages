@@ -32,6 +32,14 @@ typedef MarkdownOnSelectionChangedCallback = void Function(
 typedef MarkdownTapLinkCallback = void Function(
     String text, String? href, String title);
 
+/// Signature for callbacks used by [MarkdownWidget] when the user long presses a link.
+/// The callback will return the link text, destination, and title from the
+/// Markdown link tag in the document.
+///
+/// Used by [MarkdownWidget.onLongPress].
+typedef MarkdownLongPressLinkCallback = void Function(
+    String text, String? href, String title);
+
 /// Signature for custom image widget.
 ///
 /// Used by [MarkdownWidget.imageBuilder]
@@ -215,6 +223,7 @@ abstract class MarkdownWidget extends StatefulWidget {
     this.syntaxHighlighter,
     this.onSelectionChanged,
     this.onTapLink,
+    this.onLongPressLink,
     this.onTapText,
     this.imageDirectory,
     this.blockSyntaxes,
@@ -256,6 +265,9 @@ abstract class MarkdownWidget extends StatefulWidget {
 
   /// Called when the user taps a link.
   final MarkdownTapLinkCallback? onTapLink;
+
+  /// Called when the user taps a link.
+  final MarkdownLongPressLinkCallback? onLongPressLink;
 
   /// Called when the user changes selection when [selectable] is set to true.
   final MarkdownOnSelectionChangedCallback? onSelectionChanged;
@@ -419,14 +431,23 @@ class _MarkdownWidgetState extends State<MarkdownWidget>
 
   @override
   GestureRecognizer createLink(String text, String? href, String title) {
-    final TapGestureRecognizer recognizer = TapGestureRecognizer()
+    final TapGestureRecognizer tapRecognizer = TapGestureRecognizer()
       ..onTap = () {
         if (widget.onTapLink != null) {
           widget.onTapLink!(text, href, title);
         }
       };
-    _recognizers.add(recognizer);
-    return recognizer;
+
+    final LongPressGestureRecognizer longPressRecognizer = LongPressGestureRecognizer()
+      ..onLongPress = () {
+        if (widget.onLongPressLink != null) {
+          widget.onLongPressLink!(text, href, title);
+        }
+      };
+
+    _recognizers.add(tapRecognizer);
+    _recognizers.add(longPressRecognizer);
+    return tapRecognizer;
   }
 
   @override
