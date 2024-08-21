@@ -377,7 +377,7 @@ class MarkdownBuilder implements md.NodeVisitor {
       );
     } else {
 
-      final tag = _inlines.last.tag;
+      final String? tag = _inlines.last.tag;
 
       GestureRecognizer? recognizer;
       if (tag == 'a') {

@@ -32,7 +32,11 @@ typedef MarkdownOnSelectionChangedCallback = void Function(
 typedef MarkdownTapLinkCallback = void Function(
     String text, String? href, String title);
 
-
+/// Signature for callbacks used by [MarkdownWidget] when the user long presses a callout.
+/// The callback will return the callout text, callout id, and callout type from the
+/// Markdown link tag in the document.
+///
+/// Used by [MarkdownWidget.onLongPressCallout].
 typedef MarkdownLongPressCalloutCallback = void Function(
     String text, String id, String type);
 
@@ -426,23 +430,14 @@ class _MarkdownWidgetState extends State<MarkdownWidget> implements MarkdownBuil
 
   @override
   GestureRecognizer createLink(String text, String? href, String title) {
-    final TapGestureRecognizer tapRecognizer = TapGestureRecognizer()
+    final TapGestureRecognizer recognizer = TapGestureRecognizer()
       ..onTap = () {
         if (widget.onTapLink != null) {
           widget.onTapLink!(text, href, title);
         }
       };
-
-    final LongPressGestureRecognizer longPressRecognizer = LongPressGestureRecognizer()
-      ..onLongPress = () {
-        if (widget.onLongPressLink != null) {
-          widget.onLongPressLink!(text, href, title);
-        }
-      };
-
-    _recognizers.add(tapRecognizer);
-    _recognizers.add(longPressRecognizer);
-    return tapRecognizer;
+    _recognizers.add(recognizer);
+    return recognizer;
   }
 
   @override
@@ -548,7 +543,6 @@ class Markdown extends MarkdownWidget {
     super.onTapLink,
     super.onCalloutLongPress,
     super.onTapText,
-    super.onLongPressLink,
     super.imageDirectory,
     super.blockSyntaxes,
     super.inlineSyntaxes,
