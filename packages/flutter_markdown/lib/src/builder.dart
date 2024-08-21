@@ -86,6 +86,10 @@ abstract class MarkdownBuilderDelegate {
   /// text, `href` attribute, and title.
   GestureRecognizer createLink(String text, String? href, String title);
 
+  /// Returns a gesture recognizer to use for an `a` element with the given
+  /// text, `href` attribute, and title.
+  GestureRecognizer createCallout(String text, String id, String type);
+
   /// Returns formatted text to use to display the given contents of a `pre`
   /// element.
   ///
@@ -174,6 +178,8 @@ class MarkdownBuilder implements md.NodeVisitor {
   final List<_TableElement> _tables = <_TableElement>[];
   final List<_InlineElement> _inlines = <_InlineElement>[];
   final List<GestureRecognizer> _linkHandlers = <GestureRecognizer>[];
+  final List<GestureRecognizer> _calloutHandlers = <GestureRecognizer>[];
+
   String? _currentBlockTag;
   String? _lastVisitedTag;
   bool _isInBlockquote = false;
@@ -187,6 +193,7 @@ class MarkdownBuilder implements md.NodeVisitor {
     _tables.clear();
     _inlines.clear();
     _linkHandlers.clear();
+    _calloutHandlers.clear();
     _isInBlockquote = false;
 
     builders.forEach((String key, MarkdownElementBuilder value) {
@@ -267,6 +274,18 @@ class MarkdownBuilder implements md.NodeVisitor {
 
         _linkHandlers.add(
           delegate.createLink(text, destination, title),
+        );
+      } else if (tag == 'callout') {
+        final String? text = extractTextFromElement(element);
+        // Don't add empty callouts
+        if (text == null) {
+          return false;
+        }
+        final String id = element.attributes['id'] ?? '';
+        final String type = element.attributes['type'] ?? '';
+
+        _calloutHandlers.add(
+          delegate.createCallout(text, id, type),
         );
       }
 
@@ -357,13 +376,23 @@ class MarkdownBuilder implements md.NodeVisitor {
         ),
       );
     } else {
+
+      final tag = _inlines.last.tag;
+
+      GestureRecognizer? recognizer;
+      if (tag == 'a') {
+        recognizer = _linkHandlers.last;
+      } else if (tag == 'callout') {
+        recognizer = _calloutHandlers.last;
+      }
+
       child = _buildRichText(
         TextSpan(
           style: _isInBlockquote
               ? styleSheet.blockquote!.merge(_inlines.last.style)
               : _inlines.last.style,
           text: _isInBlockquote ? text.text : trimText(text.text),
-          recognizer: _linkHandlers.isNotEmpty ? _linkHandlers.last : null,
+          recognizer: recognizer,
         ),
         textAlign: _textAlignForBlockTag(_currentBlockTag),
       );
@@ -529,6 +558,8 @@ class MarkdownBuilder implements md.NodeVisitor {
         _tables.single.rows.last.children.add(child);
       } else if (tag == 'a') {
         _linkHandlers.removeLast();
+      } else if (tag == 'callout') {
+        _calloutHandlers.removeLast();
       } else if (tag == 'sup') {
         final Widget c = current.children.last;
         TextSpan? textSpan;
