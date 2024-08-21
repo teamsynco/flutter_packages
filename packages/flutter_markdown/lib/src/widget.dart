@@ -32,6 +32,10 @@ typedef MarkdownOnSelectionChangedCallback = void Function(
 typedef MarkdownTapLinkCallback = void Function(
     String text, String? href, String title);
 
+
+typedef MarkdownLongPressCalloutCallback = void Function(
+    String text, String id, String type);
+
 /// Signature for custom image widget.
 ///
 /// Used by [MarkdownWidget.imageBuilder]
@@ -215,6 +219,7 @@ abstract class MarkdownWidget extends StatefulWidget {
     this.syntaxHighlighter,
     this.onSelectionChanged,
     this.onTapLink,
+    this.onCalloutLongPress,
     this.onTapText,
     this.imageDirectory,
     this.blockSyntaxes,
@@ -256,6 +261,9 @@ abstract class MarkdownWidget extends StatefulWidget {
 
   /// Called when the user taps a link.
   final MarkdownTapLinkCallback? onTapLink;
+
+  /// Called when the user taps a link.
+  final MarkdownLongPressCalloutCallback? onCalloutLongPress;
 
   /// Called when the user changes selection when [selectable] is set to true.
   final MarkdownOnSelectionChangedCallback? onSelectionChanged;
@@ -338,8 +346,7 @@ abstract class MarkdownWidget extends StatefulWidget {
   State<MarkdownWidget> createState() => _MarkdownWidgetState();
 }
 
-class _MarkdownWidgetState extends State<MarkdownWidget>
-    implements MarkdownBuilderDelegate {
+class _MarkdownWidgetState extends State<MarkdownWidget> implements MarkdownBuilderDelegate {
   List<Widget>? _children;
   final List<GestureRecognizer> _recognizers = <GestureRecognizer>[];
 
@@ -430,6 +437,18 @@ class _MarkdownWidgetState extends State<MarkdownWidget>
   }
 
   @override
+  GestureRecognizer createCallout(String text, String id, String type) {
+    final LongPressGestureRecognizer recognizer = LongPressGestureRecognizer()
+      ..onLongPress = () {
+        if (widget.onCalloutLongPress != null) {
+          widget.onCalloutLongPress!(text, id, type);
+        }
+      };
+    _recognizers.add(recognizer);
+    return recognizer;
+  }
+
+  @override
   TextSpan formatText(MarkdownStyleSheet styleSheet, String code) {
     code = code.replaceAll(RegExp(r'\n$'), '');
     if (widget.syntaxHighlighter != null) {
@@ -462,6 +481,7 @@ class MarkdownBody extends MarkdownWidget {
     super.syntaxHighlighter,
     super.onSelectionChanged,
     super.onTapLink,
+    super.onCalloutLongPress,
     super.onTapText,
     super.imageDirectory,
     super.blockSyntaxes,
@@ -517,6 +537,7 @@ class Markdown extends MarkdownWidget {
     super.syntaxHighlighter,
     super.onSelectionChanged,
     super.onTapLink,
+    super.onCalloutLongPress,
     super.onTapText,
     super.imageDirectory,
     super.blockSyntaxes,
