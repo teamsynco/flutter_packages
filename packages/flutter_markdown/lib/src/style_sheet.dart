@@ -63,6 +63,7 @@ class MarkdownStyleSheet {
     this.superscriptFontFeatureTag,
     @Deprecated('Use textScaler instead.') this.textScaleFactor,
     TextScaler? textScaler,
+    this.callout,
   })  : assert(
           textScaler == null || textScaleFactor == null,
           'textScaleFactor is deprecated and cannot be specified when textScaler is specified.',
@@ -94,6 +95,7 @@ class MarkdownStyleSheet {
           'th': tableHead,
           'tr': tableBody,
           'td': tableBody,
+          'callout': callout,
         };
 
   /// Creates a [MarkdownStyleSheet] from the [TextStyle]s in the provided [ThemeData].
@@ -160,6 +162,7 @@ class MarkdownStyleSheet {
           ),
         ),
       ),
+      callout: const TextStyle(color: Colors.blue),
     );
   }
 
@@ -271,6 +274,11 @@ class MarkdownStyleSheet {
           ),
         ),
       ),
+      callout: theme.textTheme.textStyle.copyWith(
+        color: theme.brightness == Brightness.dark
+            ? CupertinoColors.link.darkColor
+            : CupertinoColors.link.color,
+      ),
     );
   }
 
@@ -340,6 +348,7 @@ class MarkdownStyleSheet {
           ),
         ),
       ),
+      callout: const TextStyle(color: Colors.blue),
     );
   }
 
@@ -400,6 +409,7 @@ class MarkdownStyleSheet {
     String? superscriptFontFeatureTag,
     @Deprecated('Use textScaler instead.') double? textScaleFactor,
     TextScaler? textScaler,
+    TextStyle? callout,
   }) {
     assert(
       textScaler == null || textScaleFactor == null,
@@ -469,6 +479,7 @@ class MarkdownStyleSheet {
           superscriptFontFeatureTag ?? this.superscriptFontFeatureTag,
       textScaler: newTextScaler,
       textScaleFactor: nextTextScaleFactor,
+      callout: callout ?? this.callout,
     );
   }
 
@@ -537,6 +548,7 @@ class MarkdownStyleSheet {
       // textScaleFactor and the textScaler was derived from that, so should be
       // ignored so that the textScaleFactor continues to be set.
       textScaler: other.textScaleFactor == null ? other.textScaler : null,
+      callout: callout!.merge(other.callout),
     );
   }
 
@@ -707,6 +719,8 @@ class MarkdownStyleSheet {
   /// feature to create superscript in footnotes.
   final String? superscriptFontFeatureTag;
 
+  final TextStyle? callout;
+
   /// A [Map] from element name to the corresponding [TextStyle] object.
   Map<String, TextStyle?> get styles => _styles;
   Map<String, TextStyle?> _styles;
@@ -773,7 +787,8 @@ class MarkdownStyleSheet {
         other.blockquoteAlign == blockquoteAlign &&
         other.codeblockAlign == codeblockAlign &&
         other.superscriptFontFeatureTag == superscriptFontFeatureTag &&
-        other.textScaler == textScaler;
+        other.textScaler == textScaler &&
+        other.callout == callout;
   }
 
   @override
@@ -834,6 +849,7 @@ class MarkdownStyleSheet {
       textScaler,
       textScaleFactor,
       superscriptFontFeatureTag,
+      callout
     ]);
   }
 }
